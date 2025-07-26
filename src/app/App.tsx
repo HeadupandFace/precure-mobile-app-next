@@ -1,9 +1,9 @@
 "use client"; // This line MUST be the very first line
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { getFirestore, collection, addDoc, serverTimestamp, doc, setDoc, getDoc } from 'firebase/firestore';
+import { initializeApp, FirebaseApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, Auth, User, FirebaseError as AuthFirebaseError } from 'firebase/auth';
+import { getFirestore, collection, addDoc, serverTimestamp, doc, setDoc, getDoc, Firestore, FirebaseError as FirestoreFirebaseError } from 'firebase/firestore';
 
 // Define types for your components' props
 interface ModalProps {
@@ -17,19 +17,19 @@ interface CategoryCardProps {
   onClick: () => void;
 }
 
+// EnergyFormProps: dbInstance is removed as it's not used within this component
 interface EnergyFormProps {
   userId: string | null;
   onBack: () => void;
   onFormSubmitted: () => void;
   setModalMessage: (message: string) => void;
-  dbInstance: any;
 }
 
 interface AuthScreenProps {
-  onAuthSuccess: (user: any) => void;
+  onAuthSuccess: (user: User) => void; // Changed 'any' to 'User'
   setModalMessage: (message: string) => void;
-  authInstance: any;
-  dbInstance: any;
+  authInstance: Auth; // Changed 'any' to 'Auth'
+  dbInstance: Firestore; // Changed 'any' to 'Firestore'
 }
 
 interface UtilitiesSubCategoriesScreenProps {
@@ -139,7 +139,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ title, icon, onClick }) => 
 );
 
 // Energy Form Component (Full Onboarding Form with Validation)
-const EnergyForm: React.FC<EnergyFormProps> = ({ userId, onBack, onFormSubmitted, setModalMessage, dbInstance }) => {
+const EnergyForm: React.FC<EnergyFormProps> = ({ userId, onBack, onFormSubmitted, setModalMessage /* dbInstance removed from here */ }) => {
   const [formData, setFormData] = useState({
     companyName: '',
     companyRegistrationNumber: '',
@@ -241,7 +241,7 @@ const EnergyForm: React.FC<EnergyFormProps> = ({ userId, onBack, onFormSubmitted
     }
 
     Object.keys(allFieldsToValidate).forEach(name => {
-      let value = allFieldsToValidate[name as keyof typeof allFieldsToValidate];
+      const value = allFieldsToValidate[name as keyof typeof allFieldsToValidate]; // Changed 'let' to 'const'
       const trimmedValue = value ? String(value).trim() : '';
 
       const requiredFields = [
@@ -667,628 +667,628 @@ Submission Date: ${new Date().toLocaleString()}
 
 // Utilities Sub-Categories Screen
 const UtilitiesSubCategoriesScreen: React.FC<UtilitiesSubCategoriesScreenProps> = ({ onBack, onSelectSubCategory, speakText }) => {
-  const [hasSpoken, setHasSpoken] = useState(false);
-  const storyText = `At Precure, we understand that managing business utilities can be complex and time-consuming. That's why we leverage our extensive industry expertise and collective buying power to secure the most competitive energy deals for our customers. Our intelligent system continuously monitors the market, identifying optimal tariffs and ensuring you benefit from cost savings without compromising on service. With Precure, you gain a strategic partner dedicated to optimizing your utility expenses, allowing you to focus on what truly matters: growing your business.`;
+  const [hasSpoken, setHasSpoken] = useState(false);
+  const storyText = `At Precure, we understand that managing business utilities can be complex and time-consuming. That's why we leverage our extensive industry expertise and collective buying power to secure the most competitive energy deals for our customers. Our intelligent system continuously monitors the market, identifying optimal tariffs and ensuring you benefit from cost savings without compromising on service. With Precure, you gain a strategic partner dedicated to optimizing your utility expenses, allowing you to focus on what truly matters: growing your business.`;
 
-  useEffect(() => {
-    if (!hasSpoken && speakText) {
-      speakText(storyText);
-      setHasSpoken(true);
-    }
-  }, [hasSpoken, speakText, storyText]);
+  useEffect(() => {
+    if (!hasSpoken && speakText) {
+      speakText(storyText);
+      setHasSpoken(true);
+    }
+  }, [hasSpoken, speakText, storyText]);
 
-  return React.createElement(
-    'div',
-    { className: 'p-6 bg-gray-50 min-h-screen flex flex-col items-center' },
-    React.createElement(
-      'div',
-      { className: 'w-full max-w-2xl' },
-      React.createElement(
-        'button',
-        {
-          onClick: onBack,
-          className: 'self-start mb-6 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-150 ease-in-out flex items-center'
-        },
-        React.createElement('svg', { className: 'w-4 h-4 mr-2', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' },
-          React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', d: 'M10 19l-7-7m0 0l7-7m-7 7h18' })
-        ),
-        'Back to Categories'
-      ),
-      React.createElement('h2', { className: 'text-3xl font-bold text-indigo-800 mb-6 text-center' }, 'Utilities Services'),
-      React.createElement(
-        'div',
-        { className: 'bg-white p-6 rounded-xl shadow-md mb-8 text-gray-700 leading-relaxed' },
-        React.createElement('p', { className: 'mb-4' },
-          'At Precure, we understand that managing business utilities can be complex and time-consuming. That\'s why we leverage our extensive industry expertise and collective buying power to secure the most competitive energy deals for our customers.'
-        ),
-        React.createElement('p', null,
-          'Our intelligent system continuously monitors the market, identifying optimal tariffs and ensuring you benefit from cost savings without compromising on service. With Precure, you gain a strategic partner dedicated to optimizing your utility expenses, allowing you to focus on what truly matters: growing your business.'
-        )
-      ),
-      React.createElement(
-        'div',
-        { className: 'grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3' },
-        React.createElement(CategoryCard, { title: 'Energy (Precure)', icon: '⚡', onClick: () => onSelectSubCategory('Energy (Precure)') }),
-        React.createElement(CategoryCard, { title: 'Water Management', icon: '💧', onClick: () => onSelectSubCategory('Water Management') }),
-        React.createElement(CategoryCard, { title: 'Waste Solutions', icon: '♻️', onClick: () => onSelectSubCategory('Waste Solutions') })
-      )
-    )
-  );
+  return React.createElement(
+    'div',
+    { className: 'p-6 bg-gray-50 min-h-screen flex flex-col items-center' },
+    React.createElement(
+      'div',
+      { className: 'w-full max-w-2xl' },
+      React.createElement(
+        'button',
+        {
+          onClick: onBack,
+          className: 'self-start mb-6 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-150 ease-in-out flex items-center'
+        },
+        React.createElement('svg', { className: 'w-4 h-4 mr-2', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' },
+          React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', d: 'M10 19l-7-7m0 0l7-7m-7 7h18' })
+        ),
+        'Back to Categories'
+      ),
+      React.createElement('h2', { className: 'text-3xl font-bold text-indigo-800 mb-6 text-center' }, 'Utilities Services'),
+      React.createElement(
+        'div',
+        { className: 'bg-white p-6 rounded-xl shadow-md mb-8 text-gray-700 leading-relaxed' },
+        React.createElement('p', { className: 'mb-4' },
+          'At Precure, we understand that managing business utilities can be complex and time-consuming. That\'s why we leverage our extensive industry expertise and collective buying power to secure the most competitive energy deals for our customers.'
+        ),
+        React.createElement('p', null,
+          'Our intelligent system continuously monitors the market, identifying optimal tariffs and ensuring you benefit from cost savings without compromising on service. With Precure, you gain a strategic partner dedicated to optimizing your utility expenses, allowing you to focus on what truly matters: growing your business.'
+        )
+      ),
+      React.createElement(
+        'div',
+        { className: 'grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3' },
+        React.createElement(CategoryCard, { title: 'Energy (Precure)', icon: '⚡', onClick: () => onSelectSubCategory('Energy (Precure)') }),
+        React.createElement(CategoryCard, { title: 'Water Management', icon: '💧', onClick: () => onSelectSubCategory('Water Management') }),
+        React.createElement(CategoryCard, { title: 'Waste Solutions', icon: '♻️', onClick: () => onSelectSubCategory('Waste Solutions') })
+      )
+    )
+  );
 };
 
 
 // Category Detail Screen Component
 const CategoryDetailScreen: React.FC<CategoryDetailScreenProps> = ({ title, description, onBack, speakText }) => {
-  const [hasSpoken, setHasSpoken] = useState(false);
+  const [hasSpoken, setHasSpoken] = useState(false);
 
-  useEffect(() => {
-    if (!hasSpoken && speakText) {
-      speakText(description);
-      setHasSpoken(true);
-    }
-  }, [hasSpoken, speakText, description]);
+  useEffect(() => {
+    if (!hasSpoken && speakText) {
+      speakText(description);
+      setHasSpoken(true);
+    }
+  }, [hasSpoken, speakText, description]);
 
-  return React.createElement(
-    'div',
-    { className: 'p-6 bg-gray-50 min-h-screen flex flex-col' },
-    React.createElement(
-      'button',
-      {
-        onClick: onBack,
-        className: 'self-start mb-6 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-150 ease-in-out flex items-center'
-      },
-      React.createElement('svg', { className: 'w-4 h-4 mr-2', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' },
-        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', d: 'M10 19l-7-7m0 0l7-7m-7 7h18' })
-      ),
-      'Back'
-    ),
-    React.createElement('h2', { className: 'text-3xl font-bold text-indigo-800 mb-6 text-center' }, title, ' Benefits'),
-    React.createElement(
-      'div',
-      { className: 'bg-white p-6 rounded-xl shadow-md flex-grow text-gray-700 leading-relaxed' },
-      React.createElement('p', { className: 'mb-4' }, description),
-      React.createElement('p', { className: 'font-semibold' }, 'Simply fill out the forms within this section to experience seamless operations with Precure!')
-    )
-  );
+  return React.createElement(
+    'div',
+    { className: 'p-6 bg-gray-50 min-h-screen flex flex-col' },
+    React.createElement(
+      'button',
+      {
+        onClick: onBack,
+        className: 'self-start mb-6 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-150 ease-in-out flex items-center'
+      },
+      React.createElement('svg', { className: 'w-4 h-4 mr-2', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' },
+        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', d: 'M10 19l-7-7m0 0l7-7m-7 7h18' })
+      ),
+      'Back'
+    ),
+    React.createElement('h2', { className: 'text-3xl font-bold text-indigo-800 mb-6 text-center' }, title, ' Benefits'),
+    React.createElement(
+      'div',
+      { className: 'bg-white p-6 rounded-xl shadow-md flex-grow text-gray-700 leading-relaxed' },
+      React.createElement('p', { className: 'mb-4' }, description),
+      React.createElement('p', { className: 'font-semibold' }, 'Simply fill out the forms within this section to experience seamless operations with Precure!')
+    )
+  );
 };
 
 // Auth Screen Component for Login/Signup
 const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, setModalMessage, authInstance, dbInstance }) => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleAuth = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      console.log("Attempting authentication...");
-      if (!authInstance) {
-        console.error("Firebase Auth object is null or undefined. Firebase config might be missing.");
-        setModalMessage("Firebase is not configured. Please provide your Firebase project details in the code.");
-        return;
-      }
+  const handleAuth = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      console.log("Attempting authentication...");
+      if (!authInstance) {
+        console.error("Firebase Auth object is null or undefined. Firebase config might be missing.");
+        setModalMessage("Firebase is not configured. Please provide your Firebase project details in the code.");
+        return;
+      }
 
-      let userCredential;
-      if (isLogin) {
-        console.log("Attempting login with email:", email);
-        userCredential = await signInWithEmailAndPassword(authInstance, email, password);
-      } else {
-        console.log("Attempting signup with email:", email, "and display name:", displayName);
-        userCredential = await createUserWithEmailAndPassword(authInstance, email, password);
-        if (userCredential.user) {
-          const userDocRef = doc(dbInstance, `artifacts/${appId}/users/${userCredential.user.uid}`);
-          await setDoc(userDocRef, {
-            email: email,
-            displayName: displayName,
-            createdAt: serverTimestamp()
-          });
-          console.log("User display name stored in Firestore.");
-        }
-      }
-      console.log("Authentication successful. User credential:", userCredential);
-      onAuthSuccess(userCredential.user);
-    } catch (error: any) {
-      console.error("Authentication error caught in handleAuth:", error);
-      setModalMessage(`Authentication failed: ${error.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      let userCredential;
+      if (isLogin) {
+        console.log("Attempting login with email:", email);
+        userCredential = await signInWithEmailAndPassword(authInstance, email, password);
+      } else {
+        console.log("Attempting signup with email:", email, "and display name:", displayName);
+        userCredential = await createUserWithEmailAndPassword(authInstance, email, password);
+        if (userCredential.user) {
+          const userDocRef = doc(dbInstance, `artifacts/${appId}/users/${userCredential.user.uid}`);
+          await setDoc(userDocRef, {
+            email: email,
+            displayName: displayName,
+            createdAt: serverTimestamp()
+          });
+          console.log("User display name stored in Firestore.");
+        }
+      }
+      console.log("Authentication successful. User credential:", userCredential);
+      onAuthSuccess(userCredential.user);
+    } catch (error: any) {
+      console.error("Authentication error caught in handleAuth:", error);
+      setModalMessage(`Authentication failed: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  return React.createElement(
-    'div',
-    { className: 'p-6 bg-gradient-to-br from-cyan-100 to-blue-300 min-h-screen flex flex-col items-center justify-center' },
-    React.createElement(
-      'div',
-      { className: 'w-full max-w-md bg-white p-8 rounded-xl shadow-lg' },
-      React.createElement('h2', { className: 'text-3xl font-bold text-indigo-800 mb-6 text-center' },
-        isLogin ? 'Login' : 'Sign Up', ' to Precure'
-      ),
-      React.createElement(
-        'form',
-        { onSubmit: handleAuth },
-        !isLogin && React.createElement(
-          'div',
-          { className: 'mb-4' },
-          React.createElement('label', { htmlFor: 'displayName', className: 'block text-gray-700 text-sm font-semibold mb-2' }, 'User Name'),
-          React.createElement('input', {
-            type: 'text', id: 'displayName', value: displayName, onChange: (e) => setDisplayName(e.target.value),
-            className: 'shadow-sm appearance-none border rounded-md w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out',
-            placeholder: 'Your display name', required: !isLogin
-          })
-        ),
-        React.createElement(
-          'div',
-          { className: 'mb-4' },
-          React.createElement('label', { htmlFor: 'email', className: 'block text-gray-700 text-sm font-semibold mb-2' }, 'Email'),
-          React.createElement('input', {
-            type: 'email', id: 'email', value: email, onChange: (e) => setEmail(e.target.value),
-            className: 'shadow-sm appearance-none border rounded-md w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out',
-            placeholder: 'your@example.com', required: true
-          })
-        ),
-        React.createElement(
-          'div',
-          { className: 'mb-6' },
-          React.createElement('label', { htmlFor: 'password', className: 'block text-gray-700 text-sm font-semibold mb-2' }, 'Password'),
-          React.createElement(
-            'div',
-            { className: 'relative' },
-            React.createElement('input', {
-              type: showPassword ? 'text' : 'password', id: 'password', value: password, onChange: (e) => setPassword(e.target.value),
-              className: 'shadow-sm appearance-none border rounded-md w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out pr-10',
-              placeholder: '********', required: true
-            }),
-            React.createElement(
-              'button',
-              {
-                type: 'button', onClick: () => setShowPassword(!showPassword),
-                className: 'absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none',
-                'aria-label': showPassword ? 'Hide password' : 'Show password'
-              },
-              showPassword ? (
-                React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', className: 'feather feather-eye-off' },
-                  React.createElement('path', { d: 'M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.54-3.39M2 2l20 20M9.91 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.54 18.54 0 0 1-2.54 3.39' }),
-                  React.createElement('path', { d: 'M15 14.5a3 3 0 1 0-5.5-1.5' })
-                )
-              ) : (
-                React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', className: 'feather feather-eye' },
-                  React.createElement('path', { d: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z' }),
-                  React.createElement('circle', { cx: '12', cy: '12', r: '3' })
-                )
-              )
-            )
-          )
-        ),
-        React.createElement(
-          'button',
-          {
-            type: 'submit',
-            className: 'w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-150 ease-in-out',
-            disabled: isLoading
-          },
-          isLoading ? (isLogin ? 'Logging In...' : 'Signing Up...') : (isLogin ? 'Login' : 'Sign Up')
-        )
-      ),
-      React.createElement('p', { className: 'text-center text-gray-600 text-sm mt-6' },
-        isLogin ? 'Don\'t have an account?' : 'Already have an account?', ' ',
-        React.createElement(
-          'button',
-          {
-            onClick: () => setIsLogin(!isLogin),
-            className: 'text-indigo-600 hover:text-indigo-800 font-semibold focus:outline-none'
-          },
-          isLogin ? 'Sign Up' : 'Login'
-        )
-      )
-    )
-  );
+  return React.createElement(
+    'div',
+    { className: 'p-6 bg-gradient-to-br from-cyan-100 to-blue-300 min-h-screen flex flex-col items-center justify-center' },
+    React.createElement(
+      'div',
+      { className: 'w-full max-w-md bg-white p-8 rounded-xl shadow-lg' },
+      React.createElement('h2', { className: 'text-3xl font-bold text-indigo-800 mb-6 text-center' },
+        isLogin ? 'Login' : 'Sign Up', ' to Precure'
+      ),
+      React.createElement(
+        'form',
+        { onSubmit: handleAuth },
+        !isLogin && React.createElement(
+          'div',
+          { className: 'mb-4' },
+          React.createElement('label', { htmlFor: 'displayName', className: 'block text-gray-700 text-sm font-semibold mb-2' }, 'User Name'),
+          React.createElement('input', {
+            type: 'text', id: 'displayName', value: displayName, onChange: (e) => setDisplayName(e.target.value),
+            className: 'shadow-sm appearance-none border rounded-md w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out',
+            placeholder: 'Your display name', required: !isLogin
+          })
+        ),
+        React.createElement(
+          'div',
+          { className: 'mb-4' },
+          React.createElement('label', { htmlFor: 'email', className: 'block text-gray-700 text-sm font-semibold mb-2' }, 'Email'),
+          React.createElement('input', {
+            type: 'email', id: 'email', value: email, onChange: (e) => setEmail(e.target.value),
+            className: 'shadow-sm appearance-none border rounded-md w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out',
+            placeholder: 'your@example.com', required: true
+          })
+        ),
+        React.createElement(
+          'div',
+          { className: 'mb-6' },
+          React.createElement('label', { htmlFor: 'password', className: 'block text-gray-700 text-sm font-semibold mb-2' }, 'Password'),
+          React.createElement(
+            'div',
+            { className: 'relative' },
+            React.createElement('input', {
+              type: showPassword ? 'text' : 'password', id: 'password', value: password, onChange: (e) => setPassword(e.target.value),
+              className: 'shadow-sm appearance-none border rounded-md w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-150 ease-in-out pr-10',
+              placeholder: '********', required: true
+            }),
+            React.createElement(
+              'button',
+              {
+                type: 'button', onClick: () => setShowPassword(!showPassword),
+                className: 'absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none',
+                'aria-label': showPassword ? 'Hide password' : 'Show password'
+              },
+              showPassword ? (
+                React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', className: 'feather feather-eye-off' },
+                  React.createElement('path', { d: 'M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.54-3.39M2 2l20 20M9.91 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.54 18.54 0 0 1-2.54 3.39' }),
+                  React.createElement('path', { d: 'M15 14.5a3 3 0 1 0-5.5-1.5' })
+                )
+              ) : (
+                React.createElement('svg', { xmlns: 'http://www.w3.org/2000/svg', width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', className: 'feather feather-eye' },
+                  React.createElement('path', { d: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z' }),
+                  React.createElement('circle', { cx: '12', cy: '12', r: '3' })
+                )
+              )
+            )
+          )
+        ),
+        React.createElement(
+          'button',
+          {
+            type: 'submit',
+            className: 'w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-150 ease-in-out',
+            disabled: isLoading
+          },
+          isLoading ? (isLogin ? 'Logging In...' : 'Signing Up...') : (isLogin ? 'Login' : 'Sign Up')
+        )
+      ),
+      React.createElement('p', { className: 'text-center text-gray-600 text-sm mt-6' },
+        isLogin ? 'Don\'t have an account?' : 'Already have an account?', ' ',
+        React.createElement(
+          'button',
+          {
+            onClick: () => setIsLogin(!isLogin),
+            className: 'text-indigo-600 hover:text-indigo-800 font-semibold focus:outline-none'
+          },
+          isLogin ? 'Sign Up' : 'Login'
+        )
+      )
+    )
+  );
 };
 
 
 // Main App Component
 const App: React.FC = () => { // Add React.FC to the App component
-  const [currentPage, setCurrentPage] = useState('auth');
-  const [user, setUser] = useState<any>(null); // Use a more specific type if possible for user
-  const [isAuthReady, setIsAuthReady] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<any>(null);
-  const [hasSpokenIntro, setHasSpokenIntro] = useState(false);
-  // === NEW: State for voice enabled/disabled ===
-  const [isVoiceEnabled, setIsVoiceEnabled] = useState(true); // Default to on
+  const [currentPage, setCurrentPage] = useState('auth');
+  const [user, setUser] = useState<any>(null); // Use a more specific type if possible for user
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [hasSpokenIntro, setHasSpokenIntro] = useState(false);
+  // === NEW: State for voice enabled/disabled ===
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(true); // Default to on
 
-  const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
 
-  const firebaseAppRef = useRef<any>(null);
-  const authRef = useRef<any>(null);
-  const dbRef = useRef<any>(null);
+  const firebaseAppRef = useRef<any>(null);
+  const authRef = useRef<any>(null);
+  const dbRef = useRef<any>(null);
 
-  // Effect to initialize Firebase once
-  useEffect(() => {
-    try {
-      if (!firebaseAppRef.current) {
-        if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
-          firebaseAppRef.current = initializeApp(firebaseConfig);
-          authRef.current = getAuth(firebaseAppRef.current);
-          dbRef.current = getFirestore(firebaseAppRef.current);
-          console.log("Firebase initialized successfully with Precure Mobile config.");
-          console.log("Firebase Config Used:", firebaseConfig);
-        } else {
-          console.warn("Firebase not initialized: Please update firebaseConfig with your 'Precure Mobile' project details.");
-        }
-      }
-    } catch (error) {
-      console.error("Error initializing Firebase:", error);
-    }
-  }, []);
+  // Effect to initialize Firebase once
+  useEffect(() => {
+    try {
+      if (!firebaseAppRef.current) {
+        if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+          firebaseAppRef.current = initializeApp(firebaseConfig);
+          authRef.current = getAuth(firebaseAppRef.current);
+          dbRef.current = getFirestore(firebaseAppRef.current);
+          console.log("Firebase initialized successfully with Precure Mobile config.");
+          console.log("Firebase Config Used:", firebaseConfig);
+        } else {
+          console.warn("Firebase not initialized: Please update firebaseConfig with your 'Precure Mobile' project details.");
+        }
+      }
+    } catch (error) {
+      console.error("Error initializing Firebase:", error);
+    }
+  }, []);
 
-  // Effect to load voices once and select female voice
-  useEffect(() => {
-    const loadAndSelectVoice = async () => {
-      const getVoicesPromise = () => {
-        return new Promise(resolve => {
-          let voices = window.speechSynthesis.getVoices();
-          if (voices.length) {
-            resolve(voices);
-          } else {
-            window.speechSynthesis.onvoiceschanged = () => {
-              voices = window.speechSynthesis.getVoices();
-              resolve(voices);
-            };
-          }
-        });
-      };
+  // Effect to load voices once and select female voice
+  useEffect(() => {
+    const loadAndSelectVoice = async () => {
+      const getVoicesPromise = () => {
+        return new Promise(resolve => {
+          let voices = window.speechSynthesis.getVoices();
+          if (voices.length) {
+            resolve(voices);
+          } else {
+            window.speechSynthesis.onvoiceschanged = () => {
+              voices = window.speechSynthesis.getVoices();
+              resolve(voices);
+            };
+          }
+        });
+      };
 
-      const voices = await getVoicesPromise();
-      let voiceToUse = null;
+      const voices = await getVoicesPromise();
+      let voiceToUse = null;
 
-      // Prioritize Google UK English Female
-      voiceToUse = voices.find(voice => voice.lang === 'en-GB' && voice.name.includes('Google UK English Female'));
+      // Prioritize Google UK English Female
+      voiceToUse = voices.find(voice => voice.lang === 'en-GB' && voice.name.includes('Google UK English Female'));
 
-      // Fallback to any English female voice
-      if (!voiceToUse) {
-        voiceToUse = voices.find(voice => voice.lang.startsWith('en-') && voice.name.includes('Female'));
-      }
+      // Fallback to any English female voice
+      if (!voiceToUse) {
+        voiceToUse = voices.find(voice => voice.lang.startsWith('en-') && voice.name.includes('Female'));
+      }
 
-      // Fallback to any voice explicitly marked as female (less common but good to check)
-      if (!voiceToUse) {
-        voiceToUse = voices.find(voice => voice.gender === 'female');
-      }
+      // Fallback to any voice explicitly marked as female (less common but good to check)
+      if (!voiceToUse) {
+        voiceToUse = voices.find(voice => voice.gender === 'female');
+      }
 
-      // FALLBACK TO ANY AVAILABLE VOICE if no specific female voice is found
-      if (!voiceToUse && voices.length > 0) {
-          voiceToUse = voices[0];
-          console.warn("No preferred female voice found. Using the first available voice:", voiceToUse.name);
-      }
-
-
-      if (voiceToUse) {
-        setSelectedVoice(voiceToUse);
-      } else {
-        console.warn("No suitable voice found. Speech will be silent.");
-      }
-    };
-
-    loadAndSelectVoice();
-  }, []);
-
-  // speakText utility function, made useCallback to be stable for useEffect dependencies
-  const speakText = useCallback((text: string) => {
-    // Only speak if voice is enabled AND selectedVoice is available
-    if (isVoiceEnabled && selectedVoice) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-GB';
-      utterance.voice = selectedVoice;
-      window.speechSynthesis.speak(utterance);
-    } else if (!isVoiceEnabled) {
-        console.log("Voice output is currently disabled by user preference.");
-    } else {
-        console.warn("Cannot speak: No selected voice available or voice not enabled.");
-    }
-  }, [selectedVoice, isVoiceEnabled]); // isVoiceEnabled added to dependencies
+      // FALLBACK TO ANY AVAILABLE VOICE if no specific female voice is found
+      if (!voiceToUse && voices.length > 0) {
+          voiceToUse = voices[0];
+          console.warn("No preferred female voice found. Using the first available voice:", voiceToUse.name);
+      }
 
 
-  // Effect for auth state changes and initial setup
-  useEffect(() => {
-    const setupAuth = () => {
-      if (!authRef.current || !dbRef.current) {
-        setModalMessage("Firebase is not initialized. Please ensure your 'Precure Mobile' Firebase config is correctly pasted in the code.");
-        setIsAuthReady(true);
-        return;
-      }
+      if (voiceToUse) {
+        setSelectedVoice(voiceToUse);
+      } else {
+        console.warn("No suitable voice found. Speech will be silent.");
+      }
+    };
 
-      const unsubscribe = onAuthStateChanged(authRef.current, async (currentUser: any) => {
-        if (currentUser) {
-          setUser(currentUser);
-          console.log("User authenticated:", currentUser.uid);
+    loadAndSelectVoice();
+  }, []);
 
-          if (!currentUser.displayName) {
-            try {
-              const userDocRef = doc(dbRef.current, `artifacts/${appId}/users/${currentUser.uid}`);
-              const docSnap = await getDoc(userDocRef);
-              if (docSnap.exists() && docSnap.data().displayName) {
-                setUser(prevUser => ({ ...prevUser, displayName: docSnap.data().displayName }));
-              }
-            } catch (error) {
-              console.error("Error fetching display name from Firestore:", error);
-            }
-          }
-          setCurrentPage('home');
-        } else {
-          console.log("No user signed in.");
-          setUser(null);
-          setCurrentPage('auth');
-        }
-        setIsAuthReady(true);
-      });
-
-      if (initialAuthToken && !authRef.current.currentUser) {
-        try {
-          signInWithCustomToken(authRef.current, initialAuthToken)
-            .catch((tokenError: any) => console.warn("Custom token sign-in failed:", tokenError));
-        } catch (e: any) {
-          console.warn("Error attempting custom token sign-in:", e);
-        }
-      }
-
-      return () => unsubscribe();
-    };
-
-    setupAuth();
-  }, []);
-
-  // Effect for home page speech (separated for clarity and control)
-  useEffect(() => {
-    // Only speak intro if voice is enabled initially AND on home page AND not spoken yet
-    if (currentPage === 'home' && selectedVoice && !hasSpokenIntro && isVoiceEnabled) {
-      const introText = "Hello, I am Precure AI. Your intelligent partner for business operations. We automate complex workflows for efficiency and accuracy.";
-      const questionText = "Where would you like to start today? Utilities, Insurance, HR, Project Management, Finance, or Supply Chain?";
-
-      const speakSequence = async () => {
-        window.speechSynthesis.cancel();
-
-        const introUtterance = new SpeechSynthesisUtterance(introText);
-        introUtterance.lang = 'en-GB';
-        introUtterance.voice = selectedVoice;
-
-        await new Promise(resolve => {
-          introUtterance.onend = resolve;
-          window.speechSynthesis.speak(introUtterance);
-        });
-
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        const questionUtterance = new SpeechSynthesisUtterance(questionText);
-        questionUtterance.lang = 'en-GB';
-        questionUtterance.voice = selectedVoice;
-
-        await new Promise(resolve => {
-          questionUtterance.onend = resolve;
-          window.speechSynthesis.speak(questionUtterance);
-        });
-
-        setHasSpokenIntro(true);
-      };
-
-      speakSequence();
-    }
-  }, [currentPage, selectedVoice, hasSpokenIntro, speakText, isVoiceEnabled]); // isVoiceEnabled added to dependencies
+  // speakText utility function, made useCallback to be stable for useEffect dependencies
+  const speakText = useCallback((text: string) => {
+    // Only speak if voice is enabled AND selectedVoice is available
+    if (isVoiceEnabled && selectedVoice) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-GB';
+      utterance.voice = selectedVoice;
+      window.speechSynthesis.speak(utterance);
+    } else if (!isVoiceEnabled) {
+        console.log("Voice output is currently disabled by user preference.");
+    } else {
+        console.warn("Cannot speak: No selected voice available or voice not enabled.");
+    }
+  }, [selectedVoice, isVoiceEnabled]); // isVoiceEnabled added to dependencies
 
 
-  const handleAuthSuccess = (loggedInUser: any) => {
-    setUser(loggedInUser);
-    setCurrentPage('home');
-    setModalMessage(`Welcome, ${loggedInUser.displayName || loggedInUser.email}!`);
-  };
+  // Effect for auth state changes and initial setup
+  useEffect(() => {
+    const setupAuth = () => {
+      if (!authRef.current || !dbRef.current) {
+        setModalMessage("Firebase is not initialized. Please ensure your 'Precure Mobile' Firebase config is correctly pasted in the code.");
+        setIsAuthReady(true);
+        return;
+      }
 
-  const updateUserLastSelectedCategory = useCallback(async (categoryName: string) => {
-    if (user && dbRef.current) {
-      try {
-        const userDocRef = doc(dbRef.current, `artifacts/${appId}/users/${user.uid}`);
-        await setDoc(userDocRef, { lastSelectedCategory: categoryName, lastSelectedCategoryTimestamp: serverTimestamp() }, { merge: true });
-        console.log(`User ${user.uid} last selected category updated to: ${categoryName}`);
-      } catch (error: any) {
-        console.error("Error updating user last selected category:", error);
-      }
-    }
-  }, [user, appId, dbRef]);
+      const unsubscribe = onAuthStateChanged(authRef.current, async (currentUser: any) => {
+        if (currentUser) {
+          setUser(currentUser);
+          console.log("User authenticated:", currentUser.uid);
 
-  const handleFormSubmitted = useCallback(() => {
-    setModalMessage("Form submitted successfully! The bot will pick it up from there.");
-    setCurrentPage('home');
-  }, []);
+          if (!currentUser.displayName) {
+            try {
+              const userDocRef = doc(dbRef.current, `artifacts/${appId}/users/${currentUser.uid}`);
+              const docSnap = await getDoc(userDocRef);
+              if (docSnap.exists() && docSnap.data().displayName) {
+                setUser(prevUser => ({ ...prevUser, displayName: docSnap.data().displayName }));
+              }
+            } catch (error) {
+              console.error("Error fetching display name from Firestore:", error);
+            }
+          }
+          setCurrentPage('home');
+        } else {
+          console.log("No user signed in.");
+          setUser(null);
+          setCurrentPage('auth');
+        }
+        setIsAuthReady(true);
+      });
 
-  const handleCategoryClick = (title: string) => {
-    updateUserLastSelectedCategory(title);
+      if (initialAuthToken && !authRef.current.currentUser) {
+        try {
+          signInWithCustomToken(authRef.current, initialAuthToken)
+            .catch((tokenError: any) => console.warn("Custom token sign-in failed:", tokenError));
+        } catch (e: any) {
+          console.warn("Error attempting custom token sign-in:", e);
+        }
+      }
 
-    if (title === "Utilities") {
-      setCurrentPage('utilitiesSubCategories');
-    } else if (title === "Energy (Precure)") {
-      setCurrentPage('energyForm');
-    } else {
-      setSelectedCategory({
-        title: title,
-        description: getCategoryDescription(title)
-      });
-      setCurrentPage('categoryDetail');
-    }
-  };
+      return () => unsubscribe();
+    };
 
-  const handleLogout = async () => {
-    try {
-      if (authRef.current) {
-        await signOut(authRef.current);
-        setUser(null);
-        setCurrentPage('auth');
-        setModalMessage("You have been logged out.");
-      } else {
-        console.warn("Auth instance not available for logout.");
-        setModalMessage("Cannot log out: Authentication service not available.");
-      }
-    } catch (error: any) {
-      console.error("Logout error:", error);
-      setModalMessage(`Logout failed: ${error.message}`);
-    }
-  };
+    setupAuth();
+  }, []);
 
-  const getCategoryDescription = (title: string) => {
-    switch (title) {
-      case "Utilities":
-        return "Streamline your utility management with Precure. Our system automates bill processing, consumption tracking, and supplier negotiations, ensuring you always get the best rates and never miss a payment. Reduce administrative burden and gain clear insights into your energy and water usage.";
-      case "Insurance":
-        return "Precure simplifies your insurance processes. From policy management to claims processing, our AI-powered system helps you find optimal coverage, manage renewals, and expedite claims, saving you time and reducing risks. Ensure your business is always protected with minimal effort.";
-      case "HR Management":
-        return "Transform your HR operations with Precure. Automate onboarding, payroll, leave management, and employee data handling. Our system ensures compliance, reduces manual errors, and frees up your HR team to focus on strategic initiatives and employee well-being.";
-      case "Project Mgmt.":
-        return "Enhance your project management efficiency with Precure. Our tools assist with task allocation, progress tracking, resource management, and deadline adherence. Gain real-time insights into project status, identify bottlenecks, and ensure successful project delivery every time.";
-      case "Finance":
-        return "Optimize your financial workflows with Precure. Automate invoicing, expense tracking, budget management, and financial reporting. Our system provides accurate, real-time financial data, helping you make informed decisions and maintain healthy cash flow.";
-      case "Water Management":
-        return "Efficiently manage your business's water consumption and billing with Precure. Our system helps track usage, identify leaks, and optimize water-related expenses, ensuring sustainability and cost savings.";
-      case "Waste Solutions":
-        return "Precure offers intelligent waste management solutions for your business. Automate waste collection scheduling, optimize recycling efforts, and ensure compliance with environmental regulations, contributing to a greener operation.";
-      case "Supply Chain Management":
-        return "Optimize your entire supply chain with Precure. From procurement to delivery, our system provides real-time visibility, automates logistics, and predicts demand, ensuring efficient inventory management and timely fulfillment for your B2B operations.";
-      default:
-        return "Discover the benefits of seamless operations with Precure. Our intelligent systems are designed to automate complex tasks, enhance accuracy, and free up your valuable time.";
-    }
-  };
+  // Effect for home page speech (separated for clarity and control)
+  useEffect(() => {
+    // Only speak intro if voice is enabled initially AND on home page AND not spoken yet
+    if (currentPage === 'home' && selectedVoice && !hasSpokenIntro && isVoiceEnabled) {
+      const introText = "Hello, I am Precure AI. Your intelligent partner for business operations. We automate complex workflows for efficiency and accuracy.";
+      const questionText = "Where would you like to start today? Utilities, Insurance, HR, Project Management, Finance, or Supply Chain?";
 
-  const renderContent = () => {
-    if (!isAuthReady) {
-      return React.createElement(
-        'div',
-        { className: 'flex items-center justify-center min-h-screen bg-gray-100' },
-        React.createElement('div', { className: 'text-xl text-gray-700' }, 'Loading app...')
-      );
-    }
+      const speakSequence = async () => {
+        window.speechSynthesis.cancel();
 
-    if (!firebaseAppRef.current || !authRef.current || !dbRef.current) {
-      return React.createElement(
-        'div',
-        { className: 'flex items-center justify-center min-h-screen bg-red-100 p-4 text-center' },
-        React.createElement(
-          'div',
-          { className: 'bg-white rounded-lg shadow-xl p-6 max-w-sm w-full' },
-          React.createElement('h2', { className: 'text-xl font-bold text-red-700 mb-4' }, 'Configuration Error'),
-          React.createElement('p', { className: 'text-gray-700' },
-            'Firebase is not initialized. Please ensure you have pasted your "Precure Mobile" Firebase project configuration (apiKey, authDomain, etc.) into the `firebaseConfig` object in the code.'
-          ),
-          React.createElement(
-            'button',
-            {
-              onClick: () => setModalMessage(''),
-              className: 'mt-4 px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-150 ease-in-out'
-            },
-            'Dismiss'
-          )
-        )
-      );
-    }
+        const introUtterance = new SpeechSynthesisUtterance(introText);
+        introUtterance.lang = 'en-GB';
+        introUtterance.voice = selectedVoice;
 
-    switch (currentPage) {
-      case 'auth':
-        return React.createElement(AuthScreen, {
-          onAuthSuccess: handleAuthSuccess,
-          setModalMessage: setModalMessage,
-          authInstance: authRef.current,
-          dbInstance: dbRef.current
-        });
-      case 'home':
-        return React.createElement(
-          'div',
-          { className: 'p-6 bg-gradient-to-br from-indigo-500 to-purple-600 min-h-screen text-white font-inter flex flex-col items-center' }, // Consider changing this background for consistency too!
-          React.createElement(
-            'div',
-            { className: 'w-full max-w-md text-center py-8' },
-            React.createElement(
-              'div',
-              { className: 'flex items-center justify-center mb-6' },
-              React.createElement('svg', { className: 'w-16 h-16 text-white', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' },
-                React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', d: 'M9.75 17L9 20l-1 1h8l-1-1l-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' })
-              ),
-              React.createElement('h1', { className: 'text-5xl font-extrabold ml-4 tracking-tight' }, 'Precure')
-            ),
-            React.createElement('p', { className: 'text-lg mb-10 leading-relaxed' },
-              'Welcome to Precure, your intelligent partner for streamlining business operations. We leverage AI to automate complex workflows, ensuring efficiency and accuracy.'
-            ),
-            user && React.createElement(
-              'p',
-              { className: 'text-sm text-indigo-100 mb-4' },
-              'Logged in as: ',
-              React.createElement('span', { className: 'font-mono bg-indigo-700 bg-opacity-50 px-2 py-1 rounded-md break-all' }, user.displayName || user.email)
-            ),
-            user && React.createElement(
-              'p',
-              { className: 'text-sm text-indigo-100 mb-8' },
-              'Your User ID: ',
-              React.createElement('span', { className: 'font-mono bg-indigo-700 bg-opacity-50 px-2 py-1 rounded-md break-all' }, user.uid)
-            ),
-            // === NEW: Voice Toggle Switch on Home Page ===
-            React.createElement(
-                'div',
-                { className: 'mb-8 p-4 bg-white bg-opacity-10 rounded-md flex items-center justify-between w-full max-w-xs' },
-                React.createElement(ToggleSwitch, {
-                    id: 'voice-toggle',
-                    label: 'Enable Voice Assistant',
-                    checked: isVoiceEnabled,
-                    onChange: setIsVoiceEnabled
-                })
-            ),
-            React.createElement('h3', { className: 'text-xl font-semibold text-white mb-4' }, 'Available Services'),
-            React.createElement(
-              'div',
-              { className: 'grid grid-cols-2 gap-6' },
-              React.createElement(CategoryCard, { title: 'Utilities', icon: '💡', onClick: () => handleCategoryClick('Utilities') }),
-              React.createElement(CategoryCard, { title: 'Insurance', icon: '🛡️', onClick: () => handleCategoryClick('Insurance') }),
-              React.createElement(CategoryCard, { title: 'HR Management', icon: '👥', onClick: () => handleCategoryClick('HR Management') }),
-              React.createElement(CategoryCard, { title: 'Project Mgmt.', icon: '📊', onClick: () => handleCategoryClick('Project Mgmt.') }),
-              React.createElement(CategoryCard, { title: 'Finance', icon: '💰', onClick: () => handleCategoryClick('Finance') }),
-              React.createElement(CategoryCard, {
-                title: 'Supply Chain Management',
-                icon: '📦',
-                onClick: () => handleCategoryClick('Supply Chain Management')
-              })
-            ),
-            user && React.createElement(
-              'button',
-              {
-                onClick: handleLogout,
-                className: 'mt-10 px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 transition duration-150 ease-in-out'
-              },
-              'Logout'
-            )
-          )
-        );
+        await new Promise(resolve => {
+          introUtterance.onend = resolve;
+          window.speechSynthesis.speak(introUtterance);
+        });
 
-      case 'utilitiesSubCategories':
-        return React.createElement(UtilitiesSubCategoriesScreen, { onBack: () => setCurrentPage('home'), onSelectSubCategory: handleCategoryClick, speakText: speakText });
-      case 'energyForm':
-        return React.createElement(EnergyForm, {
-          userId: user ? user.uid : null,
-          onBack: () => setCurrentPage('utilitiesSubCategories'),
-          setModalMessage: setModalMessage,
-          onFormSubmitted: handleFormSubmitted,
-          dbInstance: dbRef.current
-        });
-      case 'categoryDetail':
-        return React.createElement(CategoryDetailScreen, { ...selectedCategory, onBack: () => setCurrentPage('home'), speakText: speakText });
-      default:
-        return null;
-    }
-  };
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-  return React.createElement(
-    'div',
-    { className: 'App' },
-    renderContent(),
-    React.createElement(Modal, { message: modalMessage, onClose: () => setModalMessage('') })
-  );
+        const questionUtterance = new SpeechSynthesisUtterance(questionText);
+        questionUtterance.lang = 'en-GB';
+        questionUtterance.voice = selectedVoice;
+
+        await new Promise(resolve => {
+          questionUtterance.onend = resolve;
+          window.speechSynthesis.speak(questionUtterance);
+        });
+
+        setHasSpokenIntro(true);
+      };
+
+      speakSequence();
+    }
+  }, [currentPage, selectedVoice, hasSpokenIntro, speakText, isVoiceEnabled]); // isVoiceEnabled added to dependencies
+
+
+  const handleAuthSuccess = (loggedInUser: any) => {
+    setUser(loggedInUser);
+    setCurrentPage('home');
+    setModalMessage(`Welcome, ${loggedInUser.displayName || loggedInUser.email}!`);
+  };
+
+  const updateUserLastSelectedCategory = useCallback(async (categoryName: string) => {
+    if (user && dbRef.current) {
+      try {
+        const userDocRef = doc(dbRef.current, `artifacts/${appId}/users/${user.uid}`);
+        await setDoc(userDocRef, { lastSelectedCategory: categoryName, lastSelectedCategoryTimestamp: serverTimestamp() }, { merge: true });
+        console.log(`User ${user.uid} last selected category updated to: ${categoryName}`);
+      } catch (error: any) {
+        console.error("Error updating user last selected category:", error);
+      }
+    }
+  }, [user, appId, dbRef]);
+
+  const handleFormSubmitted = useCallback(() => {
+    setModalMessage("Form submitted successfully! The bot will pick it up from there.");
+    setCurrentPage('home');
+  }, []);
+
+  const handleCategoryClick = (title: string) => {
+    updateUserLastSelectedCategory(title);
+
+    if (title === "Utilities") {
+      setCurrentPage('utilitiesSubCategories');
+    } else if (title === "Energy (Precure)") {
+      setCurrentPage('energyForm');
+    } else {
+      setSelectedCategory({
+        title: title,
+        description: getCategoryDescription(title)
+      });
+      setCurrentPage('categoryDetail');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      if (authRef.current) {
+        await signOut(authRef.current);
+        setUser(null);
+        setCurrentPage('auth');
+        setModalMessage("You have been logged out.");
+      } else {
+        console.warn("Auth instance not available for logout.");
+        setModalMessage("Cannot log out: Authentication service not available.");
+      }
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      setModalMessage(`Logout failed: ${error.message}`);
+    }
+  };
+
+  const getCategoryDescription = (title: string) => {
+    switch (title) {
+      case "Utilities":
+        return "Streamline your utility management with Precure. Our system automates bill processing, consumption tracking, and supplier negotiations, ensuring you always get the best rates and never miss a payment. Reduce administrative burden and gain clear insights into your energy and water usage.";
+      case "Insurance":
+        return "Precure simplifies your insurance processes. From policy management to claims processing, our AI-powered system helps you find optimal coverage, manage renewals, and expedite claims, saving you time and reducing risks. Ensure your business is always protected with minimal effort.";
+      case "HR Management":
+        return "Transform your HR operations with Precure. Automate onboarding, payroll, leave management, and employee data handling. Our system ensures compliance, reduces manual errors, and frees up your HR team to focus on strategic initiatives and employee well-being.";
+      case "Project Mgmt.":
+        return "Enhance your project management efficiency with Precure. Our tools assist with task allocation, progress tracking, resource management, and deadline adherence. Gain real-time insights into project status, identify bottlenecks, and ensure successful project delivery every time.";
+      case "Finance":
+        return "Optimize your financial workflows with Precure. Automate invoicing, expense tracking, budget management, and financial reporting. Our system provides accurate, real-time financial data, helping you make informed decisions and maintain healthy cash flow.";
+      case "Water Management":
+        return "Efficiently manage your business's water consumption and billing with Precure. Our system helps track usage, identify leaks, and optimize water-related expenses, ensuring sustainability and cost savings.";
+      case "Waste Solutions":
+        return "Precure offers intelligent waste management solutions for your business. Automate waste collection scheduling, optimize recycling efforts, and ensure compliance with environmental regulations, contributing to a greener operation.";
+      case "Supply Chain Management":
+        return "Optimize your entire supply chain with Precure. From procurement to delivery, our system provides real-time visibility, automates logistics, and predicts demand, ensuring efficient inventory management and timely fulfillment for your B2B operations.";
+      default:
+        return "Discover the benefits of seamless operations with Precure. Our intelligent systems are designed to automate complex tasks, enhance accuracy, and free up your valuable time.";
+    }
+  };
+
+  const renderContent = () => {
+    if (!isAuthReady) {
+      return React.createElement(
+        'div',
+        { className: 'flex items-center justify-center min-h-screen bg-gray-100' },
+        React.createElement('div', { className: 'text-xl text-gray-700' }, 'Loading app...')
+      );
+    }
+
+    if (!firebaseAppRef.current || !authRef.current || !dbRef.current) {
+      return React.createElement(
+        'div',
+        { className: 'flex items-center justify-center min-h-screen bg-red-100 p-4 text-center' },
+        React.createElement(
+          'div',
+          { className: 'bg-white rounded-lg shadow-xl p-6 max-w-sm w-full' },
+          React.createElement('h2', { className: 'text-xl font-bold text-red-700 mb-4' }, 'Configuration Error'),
+          React.createElement('p', { className: 'text-gray-700' },
+            'Firebase is not initialized. Please ensure you have pasted your "Precure Mobile" Firebase project configuration (apiKey, authDomain, etc.) into the `firebaseConfig` object in the code.'
+          ),
+          React.createElement(
+            'button',
+            {
+              onClick: () => setModalMessage(''),
+              className: 'mt-4 px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-150 ease-in-out'
+            },
+            'Dismiss'
+          )
+        )
+      );
+    }
+
+    switch (currentPage) {
+      case 'auth':
+        return React.createElement(AuthScreen, {
+          onAuthSuccess: handleAuthSuccess,
+          setModalMessage: setModalMessage,
+          authInstance: authRef.current,
+          dbInstance: dbRef.current
+        });
+      case 'home':
+        return React.createElement(
+          'div',
+          { className: 'p-6 bg-gradient-to-br from-indigo-500 to-purple-600 min-h-screen text-white font-inter flex flex-col items-center' }, // Consider changing this background for consistency too!
+          React.createElement(
+            'div',
+            { className: 'w-full max-w-md text-center py-8' },
+            React.createElement(
+              'div',
+              { className: 'flex items-center justify-center mb-6' },
+              React.createElement('svg', { className: 'w-16 h-16 text-white', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' },
+                React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', d: 'M9.75 17L9 20l-1 1h8l-1-1l-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' })
+              ),
+              React.createElement('h1', { className: 'text-5xl font-extrabold ml-4 tracking-tight' }, 'Precure')
+            ),
+            React.createElement('p', { className: 'text-lg mb-10 leading-relaxed' },
+              'Welcome to Precure, your intelligent partner for streamlining business operations. We leverage AI to automate complex workflows, ensuring efficiency and accuracy.'
+            ),
+            user && React.createElement(
+              'p',
+              { className: 'text-sm text-indigo-100 mb-4' },
+              'Logged in as: ',
+              React.createElement('span', { className: 'font-mono bg-indigo-700 bg-opacity-50 px-2 py-1 rounded-md break-all' }, user.displayName || user.email)
+            ),
+            user && React.createElement(
+              'p',
+              { className: 'text-sm text-indigo-100 mb-8' },
+              'Your User ID: ',
+              React.createElement('span', { className: 'font-mono bg-indigo-700 bg-opacity-50 px-2 py-1 rounded-md break-all' }, user.uid)
+            ),
+            // === NEW: Voice Toggle Switch on Home Page ===
+            React.createElement(
+                'div',
+                { className: 'mb-8 p-4 bg-white bg-opacity-10 rounded-md flex items-center justify-between w-full max-w-xs' },
+                React.createElement(ToggleSwitch, {
+                    id: 'voice-toggle',
+                    label: 'Enable Voice Assistant',
+                    checked: isVoiceEnabled,
+                    onChange: setIsVoiceEnabled
+                })
+            ),
+            React.createElement('h3', { className: 'text-xl font-semibold text-white mb-4' }, 'Available Services'),
+            React.createElement(
+              'div',
+              { className: 'grid grid-cols-2 gap-6' },
+              React.createElement(CategoryCard, { title: 'Utilities', icon: '💡', onClick: () => handleCategoryClick('Utilities') }),
+              React.createElement(CategoryCard, { title: 'Insurance', icon: '🛡️', onClick: () => handleCategoryClick('Insurance') }),
+              React.createElement(CategoryCard, { title: 'HR Management', icon: '👥', onClick: () => handleCategoryClick('HR Management') }),
+              React.createElement(CategoryCard, { title: 'Project Mgmt.', icon: '📊', onClick: () => handleCategoryClick('Project Mgmt.') }),
+              React.createElement(CategoryCard, { title: 'Finance', icon: '💰', onClick: () => handleCategoryClick('Finance') }),
+              React.createElement(CategoryCard, {
+                title: 'Supply Chain Management',
+                icon: '📦',
+                onClick: () => handleCategoryClick('Supply Chain Management')
+              })
+            ),
+            user && React.createElement(
+              'button',
+              {
+                onClick: handleLogout,
+                className: 'mt-10 px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 transition duration-150 ease-in-out'
+              },
+              'Logout'
+            )
+          )
+        );
+
+      case 'utilitiesSubCategories':
+        return React.createElement(UtilitiesSubCategoriesScreen, { onBack: () => setCurrentPage('home'), onSelectSubCategory: handleCategoryClick, speakText: speakText });
+      case 'energyForm':
+        return React.createElement(EnergyForm, {
+          userId: user ? user.uid : null,
+          onBack: () => setCurrentPage('utilitiesSubCategories'),
+          setModalMessage: setModalMessage,
+          onFormSubmitted: handleFormSubmitted,
+          dbInstance: dbRef.current
+        });
+      case 'categoryDetail':
+        return React.createElement(CategoryDetailScreen, { ...selectedCategory, onBack: () => setCurrentPage('home'), speakText: speakText });
+      default:
+        return null;
+    }
+  };
+
+  return React.createElement(
+    'div',
+    { className: 'App' },
+    renderContent(),
+    React.createElement(Modal, { message: modalMessage, onClose: () => setModalMessage('') })
+  );
 };
 
 export default App;
