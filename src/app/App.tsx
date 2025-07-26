@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, Auth, User, FirebaseError as AuthFirebaseError } from 'firebase/auth';
-import { getFirestore, collection, addDoc, serverTimestamp, doc, setDoc, getDoc, Firestore, FirebaseError as FirestoreFirebaseError } from 'firebase/firestore';
+// Removed: signInAnonymously, signInWithCustomToken (as it's commented out in App.tsx), AuthFirebaseError (if only used in catch blocks, types can be simplified)
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, Auth, User } from 'firebase/auth';
+// Removed: collection, addDoc, FirestoreFirebaseError (if only used in catch blocks, types can be simplified)
+import { getFirestore, serverTimestamp, doc, setDoc, getDoc, Firestore } from 'firebase/firestore';
 
 // Define types for your components' props
 interface ModalProps {
